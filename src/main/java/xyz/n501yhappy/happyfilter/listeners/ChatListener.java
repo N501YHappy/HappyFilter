@@ -42,8 +42,8 @@ public class ChatListener implements Listener {
         String mergedMessage = mergeHistory(player, message);
         
         // 干扰字符处理
-        String solvedMessage = mergedMessage;  // slovedMessage是干净的消息
-        List<Integer> indexMapping = new ArrayList<>();indexMapping.clear();
+        String solvedMessage = mergedMessage;
+        List<Integer> indexMapping = new ArrayList<>();
         if (anti_interference_enabled) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < mergedMessage.length(); i++) {
@@ -66,7 +66,7 @@ public class ChatListener implements Listener {
         
         // 过滤处理
         if (result.isFiltered()) {
-            event.setMessage(AsolveMessages(message, mergedMessage, result, player,indexMapping,solvedMessage));
+            event.setMessage(solveMessages(message, mergedMessage, result, player, indexMapping, solvedMessage));
             if (enableWarning) {
                 player.sendMessage(PREFIX + WARNING_MESSAGE);
             }
@@ -95,55 +95,80 @@ public class ChatListener implements Listener {
         while (history.size() > 20) history.remove(0);
     }
 
-    private String AsolveMessages(String message, String mergedMessage, Filtered result, Player player, List<Integer> indexMapping, String solvedMessage) {
-        StringBuilder ret_message = new StringBuilder(message);
+    private String solveMessages(String message, String mergedMessage, Filtered result, Player player, List<Integer> indexMapping, String solvedMessage) {
         int startIndex = mergedMessage.length() - message.length();
+        StringBuilder retMessage = new StringBuilder(message);
         
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - Original: " + message);
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - Merged: " + mergedMessage);
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - Solved: " + solvedMessage);
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - IndexMapping: " + indexMapping);
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - result: " + result.toString());
+        // 分别处理特殊屏蔽词和普通屏蔽词
         for (int i = 0; i < result.getRIndexes().size(); i++) {
-            int l_index = result.getLIndexes().get(i);//2
-            int r_index = result.getRIndexes().get(i);//5
-            int len = r_index - l_index;//3
-            String bad_word = solvedMessage.substring(l_index, r_index);//cnm
-            String replaces = getReplace(len, bad_word);//喵喵喵
-            // player.sendMessage(ChatColor.GREEN + "Debug - Replace: " +replaces);
-            if (log_to_console) {
-                HappyFilter.plugin.getLogger().info(LOG_INFO
-                    .replace("{w}", bad_word)
-                    .replace("{player}",player.getName()));
-            }
-            //player.sendMessage(ChatColor.YELLOW + "Debug - BadWord: " + bad_word + " at [" + l_index + "," + r_index + ") -> " + replaces);
-            for (int solvedPos = l_index; solvedPos < r_index; solvedPos++) {//2-4
-                int relativePos = solvedPos - l_index;
-                if (relativePos >= replaces.length()) break;
-                if (solvedPos < indexMapping.size()) {
-                    int originalPos = Math.max(0,indexMapping.get(solvedPos)-startIndex);
-                    player.sendMessage(ChatColor.GRAY + "OP: " + originalPos);
-                    if (originalPos < ret_message.length()) {
-                        ret_message.setCharAt(originalPos, replaces.charAt(relativePos));
-                        player.sendMessage(ChatColor.GREEN + "Debug - Replace: solvedPos=" + solvedPos + 
-                                        " -> originalPos=" + originalPos + 
-                                        " with '" + replaces.charAt(relativePos) + "'");
+            int l_index = result.getLIndexes().get(i);
+            int r_index = result.getRIndexes().get(i);
+            String bad_word = solvedMessage.substring(l_index, r_index);
+            
+            // 检查是否为特殊屏蔽词
+            if (SP_K.contains(bad_word)) {
+                // 特殊屏蔽词：整体替换
+                String replacement = special_replaces.get(bad_word);
+                if (replacement != null && !replacement.isEmpty()) {
+                    // 计算在原始消息中的起始和结束位置
+                    int originalStart = -1;
+                    int originalEnd = -1;
+                    
+                    if (l_index < indexMapping.size()) {
+                        originalStart = indexMapping.get(l_index) - startIndex;
+                    }
+                    
+                    if (r_index > 0 && r_index - 1 < indexMapping.size()) {
+                        originalEnd = indexMapping.get(r_index - 1) - startIndex + 1;
+                    }
+                    
+                    // 如果找到有效位置，进行整体替换
+                    if (originalStart >= 0 && originalEnd > originalStart && originalEnd <= retMessage.length()) {
+                        retMessage.replace(originalStart, originalEnd, replacement);
+                        
+                        // 记录日志
+                        if (log_to_console) {
+                            HappyFilter.plugin.getLogger().info(LOG_INFO
+                                .replace("{w}", bad_word)
+                                .replace("{player}", player.getName()));
+                        }
+                    }
+                }
+            } else {
+                // 普通屏蔽词：使用原来的逐字符替换逻辑
+                String replacement = getReplace(r_index - l_index, bad_word);
+                
+                // 记录日志
+                if (log_to_console) {
+                    HappyFilter.plugin.getLogger().info(LOG_INFO
+                        .replace("{w}", bad_word)
+                        .replace("{player}", player.getName()));
+                }
+                
+                // 逐字符替换
+                for (int solvedPos = l_index; solvedPos < r_index; solvedPos++) {
+                    int relativePos = solvedPos - l_index;
+                    if (relativePos >= replacement.length()) break;
+                    
+                    if (solvedPos < indexMapping.size()) {
+                        int originalPos = indexMapping.get(solvedPos) - startIndex;
+                        if (originalPos >= 0 && originalPos < retMessage.length()) {
+                            retMessage.setCharAt(originalPos, replacement.charAt(relativePos));
+                        }
                     }
                 }
             }
         }
         
-        //player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - Result: " + ret_message.toString());
-        return ret_message.toString();
+        return retMessage.toString();
     }
 
-    private String getReplace(int length,String bad_word) {
-        if (SP_K.contains(bad_word)) {
-            if (special_replaces.get(bad_word).length() == bad_word.length()) {
-                return special_replaces.get(bad_word);
-            }
-        }
+    private String getReplace(int length, String bad_word) {
+        // 特殊屏蔽词已经在solveMessages中处理，这里只处理普通屏蔽词
+        
         if (!replace_enabled || length <= 0) return "";
+        
+        // 普通替换逻辑
         StringBuilder sb = new StringBuilder();
         while (sb.length() < length) {
             String word = replaceWords.get(random.nextInt(replaceWords.size()));
@@ -151,6 +176,7 @@ public class ChatListener implements Listener {
         }
         return sb.toString();
     }
+    
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         messageHistory.remove(event.getPlayer());
