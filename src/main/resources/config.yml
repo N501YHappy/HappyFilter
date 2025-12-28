@@ -26,12 +26,14 @@ filter_rules:
       - "喵"
   special_replace:
     enable: true
-    matches:  #注意特殊替换的两个词长度要一样
+    matches:
       "sb": "笨蛋"
       "fw": "杂鱼"
+      "唐": "千早爱音"
 
 warning: #给玩家提醒
   enabled: true
 
+debug: false #默认是false,如果遇到一些bug的话，把它改成true会更有助于修复这个bug
 #如果有bug请在github交issus(https://github.com/N501YHappy/HappyFilter/issues),或加入QQ群1031612019
 #有bug不要憋着不说QAQ

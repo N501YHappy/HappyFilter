@@ -1,12 +1,5 @@
 package xyz.n501yhappy.happyfilter.config;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.bukkit.configuration.Configuration;
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import net.md_5.bungee.api.ChatColor;
-import xyz.n501yhappy.happyfilter.HappyFilter;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringEscapeUtils;
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import net.md_5.bungee.api.ChatColor;
+import xyz.n501yhappy.happyfilter.HappyFilter;
 import static xyz.n501yhappy.happyfilter.HappyFilter.plugin;
 
 public class PluginConfig {
@@ -31,12 +30,13 @@ public class PluginConfig {
     public static Boolean regex_enabled = true;
     public static Boolean replace_enabled = true;
     public static Boolean special_replace_enabled = true;
+    public static Boolean debug_mode = false;
     public static Map<String, String> permissions = new HashMap<>();
-    public static Map<String,String> special_replaces = new HashMap<>();
-    //others
+    public static Map<String, String> special_replaces = new HashMap<>();
+    // others
     public static List<String> SP_K = new ArrayList<>();
     public static List<String> SP_V = new ArrayList<>();
-    //message
+    // message
     public static String PREFIX;
     public static String RELOAD_SUCCESS;
     public static String PLUGIN_ENABLED;
@@ -52,14 +52,14 @@ public class PluginConfig {
     public static String LOG_INFO;
 
     public static void loadMessages() {
-        if (!new File("messages.yml").exists()) {
+        File msgFile = new File(HappyFilter.plugin.getDataFolder(), "messages.yml");
+        if (!msgFile.exists()) {
             HappyFilter.plugin.saveResource("messages.yml", false);
         }
-        messagesConfig = YamlConfiguration.loadConfiguration(new File(HappyFilter.plugin.getDataFolder(), "messages.yml"));
-
+        messagesConfig = YamlConfiguration.loadConfiguration(msgFile);
         loadMessagesFromConfig();
     }
-    
+
     private static void loadMessagesFromConfig() {
         PREFIX = messagesConfig.getString("prefix", "§a[HappyFilter] ");
         RELOAD_SUCCESS = messagesConfig.getString("commands.reload_success", "§a配置已重载");
@@ -86,16 +86,16 @@ public class PluginConfig {
 
         to_lower = config.getBoolean("filter_rules.to_lower", true);
         regexPatterns = config.getStringList("filter_rules.regex.regexes");
-        
+
         regex_enabled = config.getBoolean("filter_rules.regex.enable", true);
         anti_interference_enabled = config.getBoolean("filter_rules.anti_interference.enabled", false);
         interferenceChars = config.getCharacterList("filter_rules.anti_interference.interference_characters");
-        
+
         replace_enabled = config.getBoolean("filter_rules.replace.enable", true);
         replaceWords = config.getStringList("filter_rules.replace.replace_words").stream()
                 .map(StringEscapeUtils::unescapeJava)
                 .collect(Collectors.toList());
-        
+
         special_replace_enabled = config.getBoolean("filter_rules.special_replace.enable", true);
         loadSpecialReplaces();
         enableWarning = config.getBoolean("warning.enabled", true);
@@ -103,20 +103,22 @@ public class PluginConfig {
         permissions.put("admin", "happyfilter.admin");
         isEnable = config.getBoolean("enabled", true);
         log_to_console = config.getBoolean("log_to_console", true);
+        debug_mode = config.getBoolean("debug", false);
         if (log_to_console) {
             plugin.getLogger().info(ChatColor.GREEN + "配置加载完成！");
-            plugin.getLogger().info(ChatColor.LIGHT_PURPLE +"特殊替换词数量: " + special_replaces.size());
-            plugin.getLogger().info(ChatColor.BLUE +"过滤词数量: " + filterWords.size());
-            plugin.getLogger().info(ChatColor.YELLOW +"正则模式数量: " + regexPatterns.size());
+            plugin.getLogger().info(ChatColor.LIGHT_PURPLE + "特殊替换词数量: " + special_replaces.size());
+            plugin.getLogger().info(ChatColor.BLUE + "过滤词数量: " + filterWords.size());
+            plugin.getLogger().info(ChatColor.YELLOW + "正则模式数量: " + regexPatterns.size());
         }
     }
-    
+
     private static void loadSpecialReplaces() {
         special_replaces.clear();
-        SP_K.clear();SP_V.clear();
-        if (config.contains("filter_rules.special_replace") && 
-            config.isConfigurationSection("filter_rules.special_replace")) {
-            
+        SP_K.clear();
+        SP_V.clear();
+        if (config.contains("filter_rules.special_replace") &&
+                config.isConfigurationSection("filter_rules.special_replace")) {
+
             for (String key : config.getConfigurationSection("filter_rules.special_replace.matches").getKeys(false)) {
                 String value = config.getString("filter_rules.special_replace.matches." + key);
                 if (value != null) {
@@ -124,11 +126,13 @@ public class PluginConfig {
                     special_replaces.put(key, unescapedValue);
                     SP_K.add(key);
                     SP_V.add(unescapedValue);
-                    if (!filterWords.contains(key)) filterWords.add(key);
+                    if (!filterWords.contains(key))
+                        filterWords.add(key);
                 }
             }
         }
     }
+
     public static void reload() {
         loadConfig();
     }

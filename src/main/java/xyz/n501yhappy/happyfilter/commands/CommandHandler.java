@@ -1,15 +1,30 @@
 package xyz.n501yhappy.happyfilter.commands;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import net.md_5.bungee.api.ChatColor;
 import static xyz.n501yhappy.happyfilter.HappyFilter.plugin;
-import static xyz.n501yhappy.happyfilter.config.PluginConfig.*;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_DISABLE;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_ENABLE;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_HEADER;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_HELP;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_RELOAD;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.NO_PERMISSION;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.PLUGIN_DISABLED;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.PLUGIN_ENABLED;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.PREFIX;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.RELOAD_SUCCESS;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.UNKNOWN_COMMAND;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.config;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.isEnable;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.loadConfig;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.permissions;
 
 public class CommandHandler implements CommandExecutor, TabCompleter {
 
@@ -29,6 +44,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             case "reload":
                 reloadConfig();
                 sender.sendMessage(PREFIX + RELOAD_SUCCESS);
+                sender.sendMessage(ChatColor.LIGHT_PURPLE + "Debug enabled");
                 break;
             case "help":
                 showHelp(sender);

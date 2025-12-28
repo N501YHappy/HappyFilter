@@ -1,6 +1,11 @@
 package xyz.n501yhappy.happyfilter.utils;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 public class AhoCorasick {
     public void insert(String word) {
@@ -63,19 +68,5 @@ public class AhoCorasick {
         public final int start;
         public final int end;
         public Hit(int s, int e) { this.start = s; this.end = e; }
-        //@Override public String toString() { return "[" + start + "," + end + ")"; }
     }
-    
-    // public static void main(String[] args) {
-    //     AhoCorasick ac = new AhoCorasick();
-    //     ac.insert("fuck");
-    //     ac.insert("sb");
-    //     ac.insert("loser");
-    //     ac.insert("fw");
-    //     ac.build();
-    //     List<Hit> ans = ac.search("fuckyou,sbfw");
-    //     for (Hit h : ans) {
-    //         System.out.println(h);
-    //     }
-    // }
 }

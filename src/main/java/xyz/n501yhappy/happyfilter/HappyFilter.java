@@ -13,11 +13,11 @@ public final class HappyFilter extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        plugin = this; new Metrics(this, 27208);
+        plugin = this; new Metrics(this, 27208); //注册bstats
         loadConfig();
         getServer().getPluginManager().registerEvents(new ChatListener(), this);
 
-        PluginCommand command = getCommand("happyfilter");
+        PluginCommand command = getCommand("happyfilter"); //注册命令
         if (command != null) {
             CommandHandler handler = new CommandHandler();
             command.setExecutor(handler);
