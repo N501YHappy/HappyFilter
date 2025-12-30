@@ -30,6 +30,8 @@ filter_rules:
       "sb": "笨蛋"
       "fw": "杂鱼"
       "唐": "千早爱音"
+      "唐人": "千早爱音"
+      "凑企鹅": "tomorin"
 
 warning: #给玩家提醒
   enabled: true

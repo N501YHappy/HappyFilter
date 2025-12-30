@@ -31,16 +31,28 @@ public class Filtered {
     public void setAreas(List<Area> areas) {
         this.areas = areas;
     }
-    public  void clearCoverd() { //删除重复覆盖的区间
+
+    public void clearCoverd() {
         List<Area> areas = this.areas;
-         Collections.sort(areas);
+        Collections.sort(areas);
         List<Area> keep = new ArrayList<>();
-        int maxR = -1;
-        for (Area a : areas) {
-            if (a.getR() <= maxR) continue;
-            keep.add(a);
-            maxR = a.getR();
+
+        for (int i = 0; i < areas.size(); i++) {
+            Area current = areas.get(i);
+            boolean covered = false;
+            for (int j = i + 1; j < areas.size(); j++) {
+                Area other = areas.get(j);
+                if (other.getL() <= current.getL() && other.getR() >= current.getR()) {
+                    covered = true;
+                    break;
+                }
+            }
+
+            if (!covered) {
+                keep.add(current);
+            }
         }
+
         this.areas = keep;
     }
 

@@ -8,7 +8,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
-import net.md_5.bungee.api.ChatColor;
 import static xyz.n501yhappy.happyfilter.HappyFilter.plugin;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_DISABLE;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.HELP_ENABLE;
@@ -44,7 +43,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             case "reload":
                 reloadConfig();
                 sender.sendMessage(PREFIX + RELOAD_SUCCESS);
-                sender.sendMessage(ChatColor.LIGHT_PURPLE + "Debug enabled");
                 break;
             case "help":
                 showHelp(sender);

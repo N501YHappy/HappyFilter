@@ -1,7 +1,6 @@
 package xyz.n501yhappy.happyfilter.listeners;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -15,9 +14,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import net.md_5.bungee.api.ChatColor;
 import xyz.n501yhappy.happyfilter.HappyFilter;
+import xyz.n501yhappy.happyfilter.config.PluginConfig;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.LOG_INFO;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.PREFIX;
-import static xyz.n501yhappy.happyfilter.config.PluginConfig.SP_K;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.WARNING_MESSAGE;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.anti_interference_enabled;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.debug_mode;
@@ -31,7 +30,7 @@ import static xyz.n501yhappy.happyfilter.config.PluginConfig.regexPatterns;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.regex_enabled;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.replaceWords;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.replace_enabled;
-import static xyz.n501yhappy.happyfilter.config.PluginConfig.special_replaces;
+import static xyz.n501yhappy.happyfilter.config.PluginConfig.special_replace;
 import static xyz.n501yhappy.happyfilter.config.PluginConfig.to_lower;
 import xyz.n501yhappy.happyfilter.utils.Filter;
 import xyz.n501yhappy.happyfilter.utils.structs.Area;
@@ -131,67 +130,63 @@ public class ChatListener implements Listener {
             player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - IndexMapping: " + indexMapping);
             player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - result: " + filtered_result.toString());
         }
-        Map<String, String> special_replace_cache = new HashMap<>();
+
+        int offset = 0;
         for (int i = 0; i < filtered_result.getAreas().size(); i++) {
             Area area = filtered_result.getAreas().get(i);
             int l_index = area.getL();
             int r_index = area.getR();
-            int len = r_index - l_index;
             String bad_word = solvedMessage.substring(l_index, r_index);
-            String replaces = getReplace(len, bad_word);
+
             if (log_to_console) {
                 HappyFilter.plugin.getLogger().info(LOG_INFO
                         .replace("{w}", bad_word)
                         .replace("{player}", player.getName()));
             }
-            // 特殊替换处理
-            if (SP_K.contains(bad_word)) {
-                if (debug_mode) {
-                    player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - special: " + bad_word);
-                }
-                StringBuilder nya = new StringBuilder(len);
-                for (int solvedPos = l_index; solvedPos < r_index; solvedPos++) {
-                    if (solvedPos >= indexMapping.size())
-                        break;
-                    int originalPos = indexMapping.get(solvedPos) - startIndex;
-                    char unique = (char) (33 + ((l_index + solvedPos) % 94));
-                    if (originalPos >= 0 && originalPos < ret_message.length()) {
-                        ret_message.setCharAt(originalPos, unique);
+
+            if (isSpecial(bad_word)) {
+                Map<String, String> charMapping = special_replace.get(bad_word);
+                for (int j = 0; j < bad_word.length(); j++) {
+                    char currentChar = bad_word.charAt(j);
+                    String mappedValue = charMapping.get(String.valueOf(currentChar));
+                    int solvePos = l_index + j;
+
+                    if (solvePos < indexMapping.size()) {
+                        int mergedPos = indexMapping.get(solvePos);
+                        int messagePos = mergedPos - startIndex + offset;
+
+                        if (messagePos >= 0 && messagePos <= ret_message.length()) {
+                            if (messagePos < ret_message.length()) ret_message.deleteCharAt(messagePos);
+                            ret_message.insert(messagePos, mappedValue);
+                            offset += mappedValue.length() - 1;
+                        }
                     }
-                    nya.append(unique);
                 }
-                special_replace_cache.put(nya.toString(), special_replaces.get(bad_word));
-                if (debug_mode) {
-                    player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - special_replace_cache: " + nya + ChatColor.BLUE
-                            + " " + special_replaces.get(bad_word));
-                }
-                continue;
-            }
-            for (int solvedPos = l_index; solvedPos < r_index; solvedPos++) {
-                int relativePos = solvedPos - l_index;
-                if (relativePos >= replaces.length())
-                    break;
-                if (solvedPos < indexMapping.size()) {
-                    int originalPos = Math.max(0, indexMapping.get(solvedPos) - startIndex);
-                    if (originalPos < ret_message.length()) {
-                        ret_message.setCharAt(originalPos, replaces.charAt(relativePos));
+
+            } else {
+                int len = r_index - l_index;
+                String replaces = getReplace(len, bad_word);
+                for (int j = 0; j < bad_word.length(); j++) {
+                    int cleanPos = l_index + j;
+                    if (cleanPos < indexMapping.size()) {
+                        int mergedPos = indexMapping.get(cleanPos);
+                        int messagePos = mergedPos - startIndex + offset;
+
+                        if (messagePos >= 0 && messagePos < ret_message.length()) {
+                            char replaceChar = replaces.charAt(j);
+                            ret_message.setCharAt(messagePos, replaceChar);
+                        }
                     }
                 }
             }
         }
+
         String result = ret_message.toString();
+
         if (debug_mode) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - RESULT: " + result);
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - Final Result: " + result);
         }
-        for (Map.Entry<String, String> e : special_replace_cache.entrySet()) {
-            result = result.replace(e.getKey(), e.getValue());
-            if (debug_mode) {
-                player.sendMessage(ChatColor.AQUA + "Debug - replacing: " + e.getKey() + " " + e.getValue());
-            }
-        }
-        if (debug_mode) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Debug - RESULT2: " + result);
-        }
+
         return result;
     }
 
@@ -204,6 +199,10 @@ public class ChatListener implements Listener {
             sb.append(word.substring(0, Math.min(length - sb.length(), word.length())));
         }
         return sb.toString();
+    }
+
+    private Boolean isSpecial(String word) {
+        return PluginConfig.special_replace.containsKey(word);
     }
 
     @EventHandler
