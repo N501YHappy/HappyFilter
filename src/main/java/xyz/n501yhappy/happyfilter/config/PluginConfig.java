@@ -156,7 +156,7 @@ public class PluginConfig {
                         String.valueOf(val.charAt(i)));
             }
         } else if (keyl > vall) {
-            int step = Math.round((float) keyl / vall);
+            int step = (int) Math.floor((double) vall / keyl);
 
             for (int i = 0; i < keyl; i++) {
                 String keyChar = String.valueOf(key.charAt(i));
@@ -170,14 +170,13 @@ public class PluginConfig {
                 mapping.put(keyChar, valChar);
             }
         } else {
-            int step = Math.round((float) vall / keyl);
-
+            int step = (int) Math.floor((double) vall / keyl);
             for (int i = 0; i < keyl; i++) {
                 String keyChar = String.valueOf(key.charAt(i));
 
                 int start = i * step;
                 int end = Math.min(start + step, vall);
-                if (val.length() - start - step < step) {
+                if (val.length() - start - step< step) {
                     end += val.length() - start - step;
                 }
                 String valChar = val.substring(start, end);

@@ -40,15 +40,19 @@ filter_rules:
     enable: true
     replace_words:
       - "喵"
-  special_replace: #把制定的词语替换为另一个词语
+  special_replace:
     enable: true
-    matches:  #注意特殊替换的两个词长度要一样
+    matches:
       "sb": "笨蛋"
       "fw": "杂鱼"
+      "唐": "千早爱音"
+      "唐人": "千早爱音"
+      "凑企鹅": "tomorin"
 
 warning: #给玩家提醒
   enabled: true
 
+debug: false #默认是false,如果遇到一些bug的话，把它改成true会更有助于修复这个bug
 #如果有bug请在github交issus(https://github.com/N501YHappy/HappyFilter/issues),或加入QQ群1031612019
 #有bug不要憋着不说QAQ
 ```
@@ -80,6 +84,7 @@ warning:
 - `/happyfilter help` - 显示帮助信息
 - `/happyfilter enable` - 启用过滤功能
 - `/happyfilter disable` - 临时禁用过滤功能
+- `当然，拼成/hf也没问题呢`
 
 ## 🔐 权限系统
 

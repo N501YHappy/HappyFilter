@@ -149,6 +149,9 @@ public class ChatListener implements Listener {
                 for (int j = 0; j < bad_word.length(); j++) {
                     char currentChar = bad_word.charAt(j);
                     String mappedValue = charMapping.get(String.valueOf(currentChar));
+                    if (debug_mode) {
+                        player.sendMessage(ChatColor.GREEN + "Debug - SP: " + currentChar + " " + mappedValue);
+                    }
                     int solvePos = l_index + j;
 
                     if (solvePos < indexMapping.size()) {
@@ -156,7 +159,8 @@ public class ChatListener implements Listener {
                         int messagePos = mergedPos - startIndex + offset;
 
                         if (messagePos >= 0 && messagePos <= ret_message.length()) {
-                            if (messagePos < ret_message.length()) ret_message.deleteCharAt(messagePos);
+                            if (messagePos < ret_message.length())
+                                ret_message.deleteCharAt(messagePos);
                             ret_message.insert(messagePos, mappedValue);
                             offset += mappedValue.length() - 1;
                         }

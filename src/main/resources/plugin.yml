@@ -1,6 +1,6 @@
 # file: plugin.yml
 name: HappyFilter
-version: '${project.version}'
+version: '2.0'
 main: xyz.n501yhappy.happyfilter.HappyFilter
 permissions:
   happyfilter.bypass:
